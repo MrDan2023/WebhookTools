@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <title>Embed Builder</title>
+</head>
+<body>
+    <h1>Enter URL:</h1>
+    <input type="text" id="webhookUrl" placeholder="Enter your webhook URL">
+    <button onclick="fetchWebhookInfo()">Get Webhook Info</button>
+    <button onclick="deleteWebhook()">Delete Webhook</button><br><br>
+
+    <div id="webhookInfo">
+    </div>
+
+    <h1>Embed Builder</h1>
+    <div id="embedBuilder">
+        <label for="embedTitle">Title:</label>
+        <input type="text" id="embedTitle" placeholder="Enter embed title"><br><br>
+
+        <label for="embedDescription">Description:</label>
+        <textarea id="embedDescription" rows="4" cols="50" placeholder="Enter embed description"></textarea><br><br>
+
+        <label for="embedFooter">Footer:</label>
+        <input type="text" id="embedFooter" placeholder="Enter embed footer"><br><br>
+
+        <label for="embedImageUrl">Image URL:</label>
+        <input type="text" id="embedImageUrl" placeholder="Enter image URL"><br><br>
+
+        <label for="embedColor">Color:</label>
+        <input type="color" id="embedColor"><br><br>
+
+        <button onclick="buildEmbed()">Send Embed</button>
+              <a href="index.html"><button>Home</button></a>
+    </div>
+
+    <div id="result">
+    </div>
+
+    <script>
+        function fetchWebhookInfo() {
+            var webhookUrl = document.getElementById("webhookUrl").value;
+
+            if (webhookUrl.trim() === "") {
+                alert("Please enter a webhook URL.");
+                return;
+            }
+
+            fetch(webhookUrl, {
+                method: "GET"
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to fetch webhook information.');
+                }
+            })
+            .then(data => {
+                var webhookInfoElement = document.getElementById("webhookInfo");
+                var avatarUrl = data.avatar_url ? data.avatar_url : "default_avatar.png";
+                webhookInfoElement.innerHTML = `
+                    <p>Name: ${data.name}</p>
+                    <p>Avatar URL: <img src="${avatarUrl}" alt="Webhook Avatar" style="max-width: 45px; max-height: 45px;"></p>
+                `;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while fetching webhook information.");
+            });
+        }
+
+        function deleteWebhook() {
+            var webhookUrl = document.getElementById("webhookUrl").value;
+
+            if (webhookUrl.trim() === "") {
+                alert("Please enter a webhook URL.");
+                return;
+            }
+
+            if (!confirm("Are you sure you want to delete this webhook? This action is irreversible.")) {
+                return;
+            }
+
+            fetch(webhookUrl, {
+                method: "DELETE"
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Webhook deleted successfully.");
+                } else {
+                    throw new Error('Failed to delete webhook.');
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while deleting the webhook.");
+            });
+        }
+
+        function buildEmbed() {
+            var webhookUrl = document.getElementById("webhookUrl").value;
+            var embedTitle = document.getElementById("embedTitle").value;
+            var embedDescription = document.getElementById("embedDescription").value;
+            var embedFooter = document.getElementById("embedFooter").value;
+            var embedImageUrl = document.getElementById("embedImageUrl").value;
+            var embedColor = document.getElementById("embedColor").value;
+
+            if (webhookUrl.trim() === "") {
+                alert("Please enter a webhook URL.");
+                return;
+            }
+
+            if (embedImageUrl.trim() !== "" && !isValidUrl(embedImageUrl)) {
+                alert("Please enter a valid image URL.");
+                return;
+            }
+
+            var embed = {
+                title: embedTitle,
+                description: embedDescription,
+                color: parseInt(embedColor.replace("#", ""), 16) || 0,
+                footer: {
+                    text: embedFooter
+                },
+                image: {
+                    url: embedImageUrl
+                }
+            };
+
+            fetch(webhookUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    embeds: [embed]
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                var resultElement = document.getElementById("result");
+                resultElement.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Please check discord to see the embed!");
+            });
+        }
+
+        function isValidUrl(url) {
+            try {
+                new URL(url);
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+    </script>
+</body>
+</html>

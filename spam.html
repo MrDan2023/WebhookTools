@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Message Spammer</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <h1>Message Spammer</h1>
+
+    <div>
+        <label for="webhookUrl">Webhook URL:</label>
+        <input type="text" id="webhookUrl" placeholder="Enter your webhook URL">
+    </div>
+
+    <div>
+        <label for="message">Message (up to 6,000 characters):</label>
+        <textarea id="message" rows="4" cols="50" placeholder="Enter your message (up to 6,000 characters)"></textarea>
+    </div>
+
+    <div style="margin-top: 10px;">
+        <label for="interval">Time Interval (seconds):</label>
+        <input type="number" id="interval" placeholder="Enter time interval" value="1">
+    </div>
+
+    <div style="margin-top: 20px;">
+        <a href="index.html"><button>Home</button></a>
+        <button id="startButton" onclick="startSendingMessage()">Start Spamming</button>
+        <button id="stopButton" onclick="stopSendingMessage()" style="display: none;">Stop Spamming</button>
+        <button id="deleteButton" onclick="deleteWebhook()">Delete Webhook</button>
+        <button id="infoButton" onclick="fetchWebhookInfo()">Get Webhook Info</button>
+    </div>
+
+    <div style="margin-top: 20px;" id="status">Status: Ready</div>
+
+    <script>
+        var intervalId;
+
+        function startSendingMessage() {
+            var webhookUrl = document.getElementById("webhookUrl").value;
+            var message = document.getElementById("message").value;
+            var intervalSeconds = parseInt(document.getElementById("interval").value, 10);
+
+            if (webhookUrl.trim() === "") {
+                alert("Please enter a webhook URL.");
+                return;
+            }
+
+            if (message.trim() === "") {
+                alert("Please enter a message to send.");
+                return;
+            }
+
+            if (message.length > 6000) {
+                alert("Message exceeds the character limit (6,000 characters).");
+                return;
+            }
+
+            if (isNaN(intervalSeconds) || intervalSeconds <= 0) {
+                alert("Please enter a valid positive time interval.");
+                return;
+            }
+
+            document.getElementById("webhookUrl").disabled = true;
+            document.getElementById("message").disabled = true;
+            document.getElementById("interval").disabled = true;
+            document.getElementById("startButton").disabled = true;
+            document.getElementById("deleteButton").disabled = true;
+            document.getElementById("infoButton").disabled = true;
+            document.getElementById("startButton").style.display = "none";
+            document.getElementById("stopButton").style.display = "inline-block";
+
+            intervalId = setInterval(function () {
+                fetch(webhookUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        content: message
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to send message.');
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            }, intervalSeconds * 1000);
+
+            document.getElementById("status").textContent = "Status: Sending messages...";
+        }
+
+        function stopSendingMessage() {
+            clearInterval(intervalId);
+
+            document.getElementById("webhookUrl").disabled = false;
+            document.getElementById("message").disabled = false;
+            document.getElementById("interval").disabled = false;
+            document.getElementById("startButton").disabled = false;
+            document.getElementById("deleteButton").disabled = false;
+            document.getElementById("infoButton").disabled = false;
+            document.getElementById("startButton").style.display = "inline-block";
+            document.getElementById("stopButton").style.display = "none";
+
+            document.getElementById("status").textContent = "Status: Stopped";
+        }
+
+        function deleteWebhook() {
+            var webhookUrl = document.getElementById("webhookUrl").value;
+
+            if (webhookUrl.trim() === "") {
+                alert("Please enter a webhook URL.");
+                return;
+            }
+
+            fetch(webhookUrl, {
+                method: "DELETE"
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Webhook deleted successfully!");
+                    document.getElementById("webhookUrl").value = "";
+                    document.getElementById("message").value = "";
+                } else {
+                    alert("Failed to delete webhook.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while deleting the webhook.");
+            });
+        }
+
+        function fetchWebhookInfo() {
+            var webhookUrl = document.getElementById("webhookUrl").value;
+
+            if (webhookUrl.trim() === "") {
+                alert("Please enter a webhook URL.");
+                return;
+            }
+
+            fetch(webhookUrl)
+            .then(response => response.json())
+            .then(data => {
+                alert("Webhook Name: " + data.name + "\nWebhook Avatar URL: " + data.avatar_url);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while fetching webhook information.");
+            });
+        }
+    </script>
+</body>
+</html>
