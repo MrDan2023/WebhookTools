@@ -1,0 +1,3 @@
+All the source code is also here: https://drive.google.com/drive/folders/1yWEynrfVDQxRx-C399YelI0WJewwF3_5?usp=sharing
+
+The reason i uploaded it into a google drive is because of node_modules folder. It is not needed to function but can be usefull ig 🤷
