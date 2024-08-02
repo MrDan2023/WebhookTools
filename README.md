@@ -2,8 +2,6 @@
 Simply send or spam messages to a webhook, or delete the webhook!
 
 Upload this to a web hosting service, and your sorted! Have fun :)
-
-Repl.it Version (More Recent & New Features!) >> https://webhooktool.mrdannattyt.repl.co/index.html
   
 Github Version >> https://mrdan2023.github.io/WebhookTools/index.html
 
